@@ -1,17 +1,63 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tarjeta de Fidelidad - FeliNails</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tarjeta de Fidelización - FeliNails</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card" id="contenido">
-    <p class="msg">Cargando...</p>
+  <div class="card" id="card">
+    <h1>FeliNails 💅</h1>
+    <p id="clientName">Cargando...</p>
+    <div class="stamps" id="stamps"></div>
+    <div class="gift-section" id="giftSection" style="display:none;">
+      <div class="gift">🎁</div>
+      <div class="gift-msg">¡Tu próxima sesión es GRATIS!</div>
+    </div>
+    <div class="msg" id="message"></div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const codigo = params.get('codigo');
+
+    const apiURL = "https://script.google.com/macros/s/AKfycbyrnbiQD7NqM0IrC2oEpDG2gXC83_5wNIG6v8KWMLY5YE5IKmRNwbS197JEesfZ6AdxKQ/exec?codigo=" + codigo;
+
+    if (!codigo) {
+      document.getElementById('card').innerHTML = `
+        <h1>❌ Código no proporcionado</h1>
+      `;
+    } else {
+      fetch(apiURL)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById('card').innerHTML = `<h1>❌ ${data.error}</h1>`;
+            return;
+          }
+
+          document.getElementById('clientName').textContent = `Cliente: ${data.nombre}`;
+          document.getElementById('message').textContent = `Llevas ${data.visitas} de 6 visitas. ¡Una más cerca del regalo!`;
+
+          const stampsContainer = document.getElementById('stamps');
+          for (let i = 0; i < 6; i++) {
+            const stamp = document.createElement('div');
+            stamp.className = 'stamp';
+            if (i < data.visitas) stamp.classList.add('filled');
+            stamp.innerHTML = i < data.visitas ? '💅' : '⬜';
+            stampsContainer.appendChild(stamp);
+          }
+
+          if (data.visitas >= 6) {
+            document.getElementById('giftSection').style.display = 'block';
+          }
+        })
+        .catch(err => {
+          document.getElementById('card').innerHTML = `<h1>❌ Error al obtener los datos</h1>`;
+        });
+    }
+  </script>
 </body>
 </html>
-<!-- Tu HTML principal va aquí -->
